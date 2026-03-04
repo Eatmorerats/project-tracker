@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sam's Project Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- ── STATS HEADER ── -->
+    <header class="stats-header" role="banner">
+      <div class="header-title">
+        <h1>Sam's Projects</h1>
+        <span class="header-subtitle">Command Center</span>
+      </div>
+      <div class="stats-bar" role="status" aria-live="polite" aria-label="Project statistics">
+        <div class="stat" id="stat-active">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Active</span>
+        </div>
+        <div class="stat" id="stat-bsw">
+          <span class="stat-value">0</span>
+          <span class="stat-label">BSW</span>
+        </div>
+        <div class="stat" id="stat-personal">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Personal</span>
+        </div>
+        <div class="stat" id="stat-stale">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Stale</span>
+        </div>
+        <div class="stat stat-timestamp" id="stat-updated">
+          <span class="stat-label">Updated</span>
+          <span class="stat-value">—</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── FOCUS SECTION ── -->
+    <section class="focus-section" aria-label="Priority focus">
+      <h2 class="section-heading">Priority Focus</h2>
+      <div class="focus-cards" id="focus-cards">
+        <!-- Rendered by app.js: top 2-3 Critical/High Active projects -->
+      </div>
+    </section>
+
+    <!-- ── FILTER / SORT BAR ── -->
+    <section class="filter-bar" aria-label="Filters and sorting">
+      <div class="filter-group">
+        <label class="filter-label">Category</label>
+        <div class="filter-buttons" id="filter-category" role="radiogroup" aria-label="Category filter">
+          <button class="filter-btn active" data-value="All" role="radio" aria-checked="true">All</button>
+          <button class="filter-btn" data-value="BSW" role="radio" aria-checked="false">BSW</button>
+          <button class="filter-btn" data-value="Personal" role="radio" aria-checked="false">Personal</button>
+          <button class="filter-btn" data-value="Ongoing" role="radio" aria-checked="false">Ongoing</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Status</label>
+        <div class="filter-buttons" id="filter-status" role="radiogroup" aria-label="Status filter">
+          <button class="filter-btn active" data-value="All" role="radio" aria-checked="true">All</button>
+          <button class="filter-btn" data-value="Parked" role="radio" aria-checked="false">Parked</button>
+          <button class="filter-btn" data-value="Planning" role="radio" aria-checked="false">Planning</button>
+          <button class="filter-btn" data-value="Active" role="radio" aria-checked="false">Active</button>
+          <button class="filter-btn" data-value="Review" role="radio" aria-checked="false">Review</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Priority</label>
+        <div class="filter-buttons" id="filter-priority" role="radiogroup" aria-label="Priority filter">
+          <button class="filter-btn active" data-value="All" role="radio" aria-checked="true">All</button>
+          <button class="filter-btn" data-value="Critical" role="radio" aria-checked="false">Critical</button>
+          <button class="filter-btn" data-value="High" role="radio" aria-checked="false">High</button>
+          <button class="filter-btn" data-value="Medium" role="radio" aria-checked="false">Medium</button>
+          <button class="filter-btn" data-value="Low" role="radio" aria-checked="false">Low</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Sort</label>
+        <select id="sort-select" class="sort-select" aria-label="Sort order">
+          <option value="lastWorked">Last Worked</option>
+          <option value="priority">Priority</option>
+          <option value="name">Name</option>
+          <option value="percentComplete">% Complete</option>
+        </select>
+      </div>
+      <div class="filter-group filter-toggle">
+        <label class="toggle-label">
+          <input type="checkbox" id="toggle-done" aria-label="Show archived projects">
+          <span>Show archived (<span id="done-count">0</span>)</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- ── KANBAN LANES ── -->
+    <section class="kanban" aria-label="Project board">
+      <div class="kanban-lane" data-status="Parked">
+        <div class="lane-header"><span class="lane-icon" aria-hidden="true"></span> <span class="lane-title">Parked</span> <span class="lane-count">0</span></div>
+        <div class="lane-cards"></div>
+      </div>
+      <div class="kanban-lane" data-status="Planning">
+        <div class="lane-header"><span class="lane-icon" aria-hidden="true"></span> <span class="lane-title">Planning</span> <span class="lane-count">0</span></div>
+        <div class="lane-cards"></div>
+      </div>
+      <div class="kanban-lane" data-status="Active">
+        <div class="lane-header"><span class="lane-icon" aria-hidden="true"></span> <span class="lane-title">Active</span> <span class="lane-count">0</span></div>
+        <div class="lane-cards"></div>
+      </div>
+      <div class="kanban-lane" data-status="Review">
+        <div class="lane-header"><span class="lane-icon" aria-hidden="true"></span> <span class="lane-title">Review</span> <span class="lane-count">0</span></div>
+        <div class="lane-cards"></div>
+      </div>
+      <div class="kanban-lane hidden" data-status="Done">
+        <div class="lane-header"><span class="lane-icon" aria-hidden="true"></span> <span class="lane-title">Done</span> <span class="lane-count">0</span></div>
+        <div class="lane-cards"></div>
+      </div>
+    </section>
+
+    <!-- ── ONGOING TOOLS / SKILLS ── -->
+    <section class="ongoing-section" aria-label="Ongoing tools and skills">
+      <h2 class="section-heading section-heading--muted">Ongoing Tools & Skills</h2>
+      <div class="ongoing-cards" id="ongoing-cards">
+        <!-- Rendered by app.js -->
+      </div>
+    </section>
+
+    <!-- ── AI UPDATE SECTION ── -->
+    <section class="ai-update-section" aria-label="AI status update">
+      <h2 class="section-heading">AI Update</h2>
+      <div class="ai-update-body">
+        <textarea id="ai-update-input" class="ai-textarea" rows="5" placeholder='Paste Claude JSON response here...' aria-label="Paste AI update JSON"></textarea>
+        <div class="ai-update-actions">
+          <button id="ai-update-apply" class="btn btn-primary">Apply Update</button>
+          <span id="ai-update-status" class="ai-status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── HUD CONTROLS (bottom-right FABs) ── -->
+    <div class="hud-controls" role="toolbar" aria-label="Quick actions">
+      <input type="file" id="file-import" accept=".json" style="display:none" aria-hidden="true">
+      <button class="fab fab--secondary" id="btn-import" title="Import backup" aria-label="Import backup">&#x1F4E5;</button>
+      <button class="fab fab--secondary" id="btn-export" title="Export backup" aria-label="Export backup">&#x1F4E4;</button>
+      <button class="fab fab--primary" id="btn-add" title="Add project" aria-label="Add project">&#x2795;</button>
+    </div>
+
+  </div><!-- /.app -->
+
+  <!-- ── PROJECT DETAIL MODAL ── -->
+  <div id="detail-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title">
+    <div class="modal-panel glass-panel">
+      <div class="modal-header">
+        <h2 id="detail-modal-title" class="modal-title"></h2>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta">
+          <span class="modal-category"></span>
+          <span class="modal-status"></span>
+          <span class="modal-priority"></span>
+          <span class="modal-last-worked"></span>
+        </div>
+        <div class="modal-next-steps">
+          <h3>Next Steps</h3>
+          <p class="modal-next-text"></p>
+        </div>
+        <div class="modal-phases">
+          <h3>Phases</h3>
+          <ul class="phase-list" id="modal-phase-list">
+            <!-- Rendered: checkmark done, arrow current, circle pending -->
+          </ul>
+        </div>
+        <div class="modal-notes">
+          <h3>Notes Log</h3>
+          <div class="notes-list" id="modal-notes-list">
+            <!-- Newest first -->
+          </div>
+        </div>
+        <div class="modal-actions-row">
+          <button class="btn btn-ai" id="modal-ai-prompt">&#x1F4CB; Get AI Update Prompt</button>
+          <button class="btn btn-edit" id="modal-edit">Edit</button>
+          <button class="btn btn-danger" id="modal-delete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADD / EDIT PROJECT MODAL ── -->
+  <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <div class="modal-panel glass-panel">
+      <div class="modal-header">
+        <h2 id="edit-modal-title">Add Project</h2>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="project-form" class="modal-body">
+        <input type="hidden" id="edit-project-id">
+
+        <div class="form-group">
+          <label for="edit-name">Project Name</label>
+          <input type="text" id="edit-name" required placeholder="Project name">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-category">Category</label>
+            <select id="edit-category">
+              <option value="BSW">BSW</option>
+              <option value="Personal">Personal</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-status">Status</label>
+            <select id="edit-status">
+              <option value="Parked">Parked</option>
+              <option value="Planning">Planning</option>
+              <option value="Active">Active</option>
+              <option value="Review">Review</option>
+              <option value="Done">Done</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-priority">Priority</label>
+            <select id="edit-priority">
+              <option value="Critical">Critical</option>
+              <option value="High">High</option>
+              <option value="Medium">Medium</option>
+              <option value="Low">Low</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="edit-next-steps">Next Steps</label>
+          <textarea id="edit-next-steps" rows="2" placeholder="What's next for this project?"></textarea>
+        </div>
+
+        <!-- Phase Management -->
+        <div class="form-group">
+          <label>Phases</label>
+          <div id="edit-phases-container">
+            <!-- Dynamic phase inputs -->
+          </div>
+          <button type="button" id="btn-add-phase" class="btn btn-small">+ Add Phase</button>
+        </div>
+
+        <!-- Notes (edit mode only) -->
+        <div class="form-group" id="edit-notes-section">
+          <label>Add Note</label>
+          <div class="note-input-row">
+            <input type="text" id="edit-new-note" placeholder="Decision or update...">
+            <button type="button" id="btn-add-note" class="btn btn-small">Add</button>
+          </div>
+          <div id="edit-notes-history" class="notes-list notes-list--compact">
+            <!-- Existing notes rendered here -->
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="submit" class="btn btn-primary">Save Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── AI PROMPT COPY MODAL ── -->
+  <div id="ai-prompt-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="ai-prompt-title">
+    <div class="modal-panel glass-panel modal-panel--narrow">
+      <div class="modal-header">
+        <h2 id="ai-prompt-title">AI Update Prompt</h2>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="ai-prompt-text" class="ai-textarea" rows="12" readonly aria-label="AI prompt to copy"></textarea>
+        <div class="modal-actions-row">
+          <button class="btn btn-primary" id="ai-prompt-copy">Copy to Clipboard</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
