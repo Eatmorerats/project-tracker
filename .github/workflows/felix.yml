@@ -1,0 +1,77 @@
+# ─── Felix — behavioral PR verification ────────────────────────────────────
+# Runs Felix from the sampulse composite action on every PR. Felix actually
+# builds and runs the PR code in a sandbox, then asks a cross-family judge
+# (OpenAI gpt-4.1) whether the running result satisfies the PR description.
+# Parallel to CodeRabbit — CodeRabbit reads diff text, Felix observes behavior.
+#
+# Required repo secret: OPENAI_API_KEY.  Optional: SUPABASE_URL +
+# SUPABASE_SERVICE_ROLE_KEY (verdict + calibration log).  GITHUB_TOKEN is
+# provided by Actions automatically.
+
+name: Felix PR Verification
+
+on:
+  pull_request:
+    # `edited` re-verifies when the PR description (the spec) changes;
+    # `ready_for_review` runs Felix once a draft is promoted.
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    # Don't spin a runner for docs-only PRs (the engine also triages skipGlobs).
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '**/*.txt'
+      - '.planning/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: write
+
+concurrency:
+  group: felix-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  felix:
+    runs-on: ubuntu-latest
+    # Skip draft PRs at the workflow level (the engine also defers drafts).
+    # Also skip PRs from forks — repository secrets aren't passed to fork
+    # workflows (GitHub security model), so OPENAI_API_KEY would resolve
+    # to an empty string and the Felix run would fail confusingly. When
+    # we want to verify a fork's PR we can re-run after merging to a
+    # branch in this repo.  CodeRabbit PR #4 round-1.
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    # Phase 1 posture: NOT VERIFIED comments but does not block the PR.
+    continue-on-error: true
+    steps:
+      - name: Checkout (full history for worktree)
+        # Pin to immutable SHA per CodeRabbit PR #4 round-2 — `@v4` is a
+        # mutable tag and a compromised tag-push would silently land in
+        # every PR run. SHA = actions/checkout v4.x release.
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 0
+          # Felix builds + runs the PR's code in a sandbox. If we leave
+          # the GITHUB_TOKEN persisted in .git/config (the actions/checkout
+          # default), a malicious PR could exfiltrate it by pushing to a
+          # remote during install/test. Felix is exactly the threat model
+          # this opt-out exists for.  CodeRabbit PR #4 round-1.
+          persist-credentials: false
+
+      - name: Run Felix
+        # sampulse default branch is `master`, not `main`. The old
+        # `Eatmorerats/sampulse@main` ref was wrong on the branch and
+        # missing the `/felix` subpath to the composite action.
+        # (eatmorerats-eng org was created 2026-06-01 but the repo was
+        # never transferred — keep canonical Eatmorerats/* until it is.)
+        uses: Eatmorerats/sampulse/felix@master
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          supabase-url: ${{ secrets.SUPABASE_URL }}
+          supabase-service-role-key: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # post=true → idempotent verdict comment + check run on the PR.
+          # Flip to 'false' for a dry-run window after first install.
+          post: 'true'
